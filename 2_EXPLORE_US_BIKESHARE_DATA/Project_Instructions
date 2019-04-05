@@ -1,0 +1,19 @@
+Project Instructions (From Udacity)
+
+Project Submission
+In this project, you will make use of Python to explore data related to bikeshare systems for three major bikeshare systems in the United States. You will perform data wrangling to unify the format of data from the three systems and write code to compute descriptive statistics. You will also make use of a package that is not part of the standard Python library to help you visualize the data.
+
+If you're on this page, then you should have completed the Jupyter Notebook, downloaded a .html copy of the document, and are ready to submit the report for evaluation. If that's the case, congratulations! Read on to the points below for some final checks before you finalize your submission. If not, then go back to the previous page to complete the project Notebook and then download it for submission.
+
+Check the Rubric
+Your project will be evaluated by a Udacity reviewer according to this Project Rubric. Be sure to review it thoroughly before you submit. Your project "meets specifications" only if it meets specifications in all the criteria. If you see room for improvement in any category in which you do not meet specifications, be sure to take some time to revise your work until you feel it is up to expectations. In particular, there is one section of the rubric that cares about the quality of your code. It is not important just that you are able to obtain the correct answers, but it is also important that you have followed good coding practices to obtain your solutions.
+
+Gather Submission Materials
+Once you are satisfied with the status of your Notebook, you should save it in a format that will make it easy for others to read. You can use the File -> Download as -> HTML (.html) menu to save your notebook as an .html file. If you are working locally and get an error about "No module name", then open a terminal and try installing the missing module using pip install <module_name> (don't include the "<" or ">" or any words following a period in the module name).
+
+You will submit both your original Notebook and an HTML or PDF copy of the Notebook for review. There is no need for you to include any data files with your submission. If you made reference to other websites, books, and other resources to help you in solving tasks in the project, make sure that you document them. It is recommended that you either add a "Resources" section in a Markdown cell at the end of the Notebook report, or you can include a readme.txt file documenting your sources.
+
+Submit the Project
+When you're ready, click on the "Submit Project" button to go to the project submission page. You can submit your files as a .zip archive or you can link to a GitHub repository containing your project files. If you go with GitHub, note that your submission will be a snapshot of the linked repository at time of submission. It is recommended that you keep each project in a separate repository to avoid any potential confusion: if a reviewer gets multiple folders representing multiple projects, there might be confusion regarding what project is to be evaluated.
+
+It can take us up to a week to grade the project, but in most cases it is much faster. You will get an email once your submission has been reviewed. If you are having any problems submitting your project or wish to check on the status of your submission, please email us at dataanalyst-project@udacity.com. In the meantime, you should feel free to continue on with your learning journey by continuing on to the next module in the program.
