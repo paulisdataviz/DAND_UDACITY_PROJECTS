@@ -1,0 +1,583 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+EXPLORATORY DATA ANALYSIS FOR WHITE WINES BY PAULA A. MUNOZ
+===========================================================
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+# Load all the packages
+
+library(ggplot2)
+library(knitr)
+library(dplyr)
+library(purrr)
+library(tidyr)
+library(corrplot)
+
+# knitr: Suppress code/messages/warnings 
+knitr::opts_chunk$set( echo=FALSE,warning=FALSE,message=FALSE)
+#        Set default plot options and center them
+knitr::opts_chunk$set(fig.width=9,fig.height=5,fig.path='Figs/',
+                      fig.align='center',tidy=TRUE,
+                      echo=FALSE,warning=FALSE,message=FALSE)
+
+```
+
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, Load_the_Data}
+# Load the Data
+white_w <-read.csv("wineQualityWhites.csv")
+white_w$X <- NULL #This is the row index of the dataset, no need to analyze
+
+```
+
+> The goal of this project is to explore the White Wine Quality dataset and identify which chemical properties influence the quality of white wines.
+
+# Exploring the data
+
+> In this section, I will perform preliminary exploration of the white wine dataset.
+
+
+```{r echo=FALSE, Preliminary_Exploration}
+#Preliminary Exploration
+head(white_w)
+
+```
+The White wine dataset has 4898 rows and 13 Columns
+
+```{r echo=FALSE}
+#Checking the number of rows and columns in dataset
+dim(white_w)
+#Dataset has 4898 rows and 13 Columns
+```
+```{r echo=FALSE}
+summary(white_w)
+
+```
+
+The structure of the data looks like this:
+```{r echo=FALSE}
+#Checking the structure of the data
+str(white_w)
+
+```
+
+Confirming quality of the data, per results below the White Wine data set seems to be cleaned since there are no NAs
+
+```{r echo=FALSE}
+#How many columns have NAs
+colSums(is.na(white_w))
+
+```
+
+```{r echo=FALSE}
+#How many Rows have NAs
+dim.data.frame(rowSums(is.na(white_w)))
+
+```
+
+
+
+# Univariate Plots Section
+
+> In this section I will create univariate plots to
+understand the structure of the individual variables in the White Wine dataset.
+
+First, I'm going to take a look at the quality variable, since I'm looking to understand what makes a white wine a good wine
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, Univariate_Plots}
+#Histogram - quality
+qplot(data = white_w, x = quality, binwidth = 1,
+      color = I("white"),
+      xlab= 'Quality Level',
+      ylab = 'Count'
+      ) +
+  scale_x_continuous(breaks = seq(0,9, 1))
+
+```
+
+Actual counts by Quality:
+
+```{r echo=FALSE}
+#Checking Counts - Quality
+table(white_w$quality)
+
+```
+
+Summary statistics of Quality:
+
+```{r echo=FALSE}
+#Summary - quality
+summary(white_w$quality)
+
+```
+
+We can conclude that Quality variable looks like it is normally distributed.
+
+
+I'll take a look at the Alcohol distribution
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, Univariate_Plots2}
+#Histogram - Alcohol
+qplot(data = white_w, x = alcohol, binwidth = 1,
+      color = I("white"),
+      xlab= 'Alcohol Level',
+      ylab = 'Count'
+      ) +
+  scale_x_continuous(breaks = seq(0,14, 1))
+
+```
+
+Summary statistics fro Alcohol:
+
+```{r echo=FALSE}
+#Summary - Alcohol
+summary(white_w$alcohol)
+
+```
+
+
+Now, I will take a quick look at the distribution of all variables that contain numeric values in the white wine dataset:
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+#Distribution of numerical variables
+white_w %>%
+  keep(is.numeric) %>%
+  gather() %>%
+  ggplot(aes(value)) +
+  facet_wrap(~ key, scales = "free") +
+  geom_histogram()
+
+```
+
+Looking at the distribution for all numeric variables, the variables that look more normally distributed are: pH and quality
+
+Most of the variables show a Positive Skew distibution, specially: chlorides, density and residual.sugar
+
+I'm going to transform the data for these variables showing a positive skew distribution to better understand these variables... The transformation that will be used is: log transformation
+
+>Transforming Chlorides variable
+
+Chlorides Histogram without transformation:
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+#Chlorides Histogram without transformation
+p1_ch <- ggplot(aes(x=chlorides), data = white_w) + geom_histogram()
+p1_ch
+
+```
+
+Chlorides Histogram with log transformation:
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+#Chlorides Histogram with transformation
+p2_ch <- p1_ch + scale_x_log10()
+p2_ch
+
+```
+
+Now chlorides variable looks normally distributed with some outliers on the right.
+
+
+>Transforming density variable
+
+Density distribution without transformation:
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#Density distribution without transformation
+p1_density <-  ggplot(aes(x=density), data = white_w) + geom_histogram()
+p1_density
+
+```
+
+Density distribution with log transformation:
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#Density distribution with log transformation
+p2_density <- p1_density + scale_x_log10() +xlim(0.98, 1.02)
+p2_density
+
+```
+
+
+```{r echo=FALSE}
+#Summary Density
+summary(white_w$density)
+
+```
+
+When looking at the transformation for density we can clearly see that most values are between 0.99 and 1.00 g/ cm3, but there are some outliers on 1.01 and 1.04 g / cm3 that makes the distribution so positively skewed.
+
+>Transforming residual.sugar variable
+
+residual.sugar distribution without transformation
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+#residual.sugar distribution without transformation
+p1_rs <- ggplot(aes(x=residual.sugar) , data = white_w) + geom_histogram()
+p1_rs
+
+```
+
+residual.distribution with log transformation:
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+#residual.distribution with log transformation
+p2_rs <- p1_rs + scale_x_log10()
+p2_rs
+
+```
+
+
+```{r echo=FALSE}
+#Summary residual Sugar
+summary(white_w$residual.sugar)
+
+```
+After transforning the residual.sugar variable, the distribution seems to be a bimodal distribution 
+
+# Univariate Analysis
+
+### What is the structure of your dataset?
+
+The white wine dataset contains:  4898 rows and 13 Variable, the dataset in general is cleaned as there are no null values
+
+### What is/are the main feature(s) of interest in your dataset?
+
+The main feature of interest is Quality, since the objective of the project is to
+understand what are the features that influence the queality of the wine.
+
+### What other features in the dataset do you think will help support your analysis?
+
+I'm still on early stages of the analysis where only unvariate analysis have been done,
+thus predicting which other variables will be helpful is a difficult task, I expect
+to have a better idea after bivariate and multivariate analysis have been done.
+
+### Did you create any new variables from existing variables in the dataset?
+I have not created any variable yet
+
+### Of the features you investigated, were there any unusual distributions? 
+
+yes, I did perform log10 transformation on three of the variables where 
+
+
+
+# Bivariate Plots Section
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#Correlation Matrix by Color
+white_w.M <-cor(white_w)
+corrplot(white_w.M, method = "color")
+
+```
+
+
+Correlogram with correlation coefficient number:
+
+```{r echo=FALSE,fig.width=9,fig.height=7}
+#correlogram with coefficient number
+white_w.M <-cor(white_w)
+corrplot(white_w.M, method = "number")
+
+```
+
+
+From Matrix above, we can identify that there is really  strong  correlation between the following variables:
+
+- Alcohol and density (Negative correlation: -0.78)
+- density and residual.sugar (Positive correlation: 0.84)
+
+There is some but not as strong correlation between the following variables:
+
+- total.sulfur.dioxide and free.sulfur.dioxide (Positive correlation: 0.62)
+- density and total.sulfur.dioxide (Positive correlation:0.53)
+- Alcohol and residual.sugar (Negative correlation: -0.45)
+- Alcohol and total.sulfur.dioxide (Negative correlation: -0.45)
+- Quality and alcohol (Positive correlation: 0.44)
+- pH and fixed.acidity (Negative correlation: -0.43)
+- Alcohol and chlorides (Negative correlation: -0.36)
+- Quality and density (Negative correlation: -0.31)
+
+
+
+#Analyzing the Strong correlations per Correlogram:
+
+- Alcohol and density (Negative correlation: -0.78)
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#Scatter Plot alcohol vs Density
+ggplot(aes(x= alcohol, y = density), data = white_w) +
+  scale_x_continuous(lim= c(7,14)) +
+  scale_y_continuous(lim= c(0.987,quantile(white_w$density, 0.99))) +
+  geom_point(fill = I('#42e8f4'), color = I('black'), shape = 21) +
+  stat_smooth(method = 'lm', color = 'red')
+
+```
+
+What's the correlation betwen the two variables alcohol and density?
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Correlation_Calcuation}
+#Correlation coeficient between alcohol and density
+with(white_w, cor.test(alcohol, density))
+
+```
+
+- density and residual.sugar (Positive correlation: 0.84)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Strong_Correlations2}
+#Scatter Plot Density vs Residual sugar
+ggplot(aes(x= residual.sugar, y = density), data = white_w) +
+  scale_x_continuous(lim= c(0,22)) +
+  scale_y_continuous(lim= c(0.987,quantile(white_w$density, 0.999)))+
+  geom_point(fill = I('#42e8f4'), color = I('black'), shape = 21) +
+  stat_smooth(method = 'lm', color = 'red')
+
+```
+
+What's the correlation betwen the two variables residual.sugar and density?
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Correlation_Calcuation2}
+#Correlation Coeficient between Density and residual sugar
+with(white_w, cor.test(residual.sugar, density))
+
+```
+#Exploring more in depth the feature of Interest Quality:
+
+what is the alcohol level per Quality Level?
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#Boxplot - alcohol Level per quality Level
+boxplot(alcohol~quality, data = white_w, col = (c("gold","blue")),
+        xlab = "Quality", ylab = "Alcohol", main = "Alcohol level per Quality Level")
+
+```
+
+From boxplot above, we can see that Quality Level 9 has a high level of alcohol, which is not very dispersed.
+
+what is the density per Quality Level?
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#Boxplot - Density per quality level
+boxplot(density~quality, data = white_w, col = (c("gold","blue")),
+        xlab = "Quality", ylab = "Density", main = "Density level per Quality Level")
+
+```
+
+
+From boxplot above, we can see that Quality Level 9 has a very low density.
+
+
+what is the Residual Sugar per Quality Level?
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#Boxplot - Residual sugar per Quality Level
+boxplot(residual.sugar~quality, data = white_w, col = (c("gold","blue")),
+        xlab = "Quality", ylab = "Residual Sugar", main = "Residual Sugar per Quality Level")
+
+```
+
+
+From boxplot above, we can see that Quality Level 9 has very low residual sugar.
+
+
+what is the pH per Quality Level?
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#Boxplot - pH per quality Level
+boxplot(pH~quality, data = white_w, col = (c("gold","blue")),
+        xlab = "Quality", ylab = "pH", main = "pH per Quality Level")
+
+```
+
+what is the Fixed Acidity per Quality Level?
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#Boxplot - Fixed Acidity per Quality Level
+boxplot(fixed.acidity~quality, data = white_w, col = (c("gold","blue")),
+        xlab = "Quality", ylab = "Fixed Acidity", main = "Fixed Acidity per Quality Level")
+
+```
+
+what is the Total sulfur Dioxide per Quality Level?
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#Boxplot - Sulfur Dioxide per Quality Level
+boxplot(total.sulfur.dioxide~quality, data = white_w, col = (c("gold","blue")),
+        xlab = "Quality", ylab = "Total sulfur dioxide", main = "Total sulfur dioxide")
+
+```
+
+##Bivariate Analysis
+
+I was able to identify that there is really  strong  correlation between the following variables:
+
+- Alcohol and density (Negative correlation: -0.78)
+- density and residual.sugar (Positive correlation: 0.84)
+
+There is some but not as strong correlation between the following variables:
+
+- total.sulfur.dioxide and free.sulfur.dioxide (Positive correlation: 0.62)
+- density and total.sulfur.dioxide (Positive correlation:0.53)
+
+When analyzing the feature of interest (quality) with other variables such as alcohol, density, residual.sugar  it was intersting to see that for quality level nine, there was not much dispersion between data points, and there were almost no outliers.
+
+In overall white wines with quality level nine seem to have a high concentration of alcohol, 
+
+
+
+# Multivariate Plots Section
+
+#Analyzing the Strong correlations and Quality
+
+- Alcohol and density (Negative correlation: -0.78)
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#Scatter Plot - Alcohol level and Density colored by Quality
+ggplot(aes(x= alcohol, y = density, colour= as.factor(quality)), data = white_w) +
+  scale_x_continuous(lim= c(7,14)) +
+  scale_y_continuous(lim= c(0.987,quantile(white_w$density, 0.99))) +
+  geom_point(alpha = 0.9)+
+  stat_smooth(method = 'lm', color = 'red') +
+  scale_color_brewer(palette = "RdYlBu", direction = -1, name = "Quality")
+
+
+```
+
+- density and residual.sugar (Positive correlation: 0.84)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE }
+#Scatter Plot Density vs Residual sugar colored by Quality
+ggplot(aes(x= residual.sugar, y = density, colour= as.factor(quality)), data = white_w) +
+  scale_x_continuous(lim= c(0,22)) +
+  scale_y_continuous(lim= c(0.987,quantile(white_w$density, 0.999)))+
+  geom_point(alpha=.8, shape = 19)+
+  geom_smooth(method = "lm", se = FALSE, aes(colour=quality)) + scale_color_brewer(palette = "RdYlBu", direction = -1, name = "Quality")
+  
+
+```
+
+- density and total.sulfur.dioxide (Positive correlation:0.53)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#Scatter Plot Density and Total sulfur Dioxide colored by Quality Level
+ggplot(aes(x= density, y = total.sulfur.dioxide,  colour= as.factor(quality)), data = white_w) +
+  scale_x_continuous(lim= c(0.985, 1.005)) +
+  geom_point(alpha=.9, shape = 19)+
+  geom_smooth(method = "lm", se = FALSE, aes(colour=quality))+
+   scale_color_brewer(palette = "RdYlBu", direction = -1, name = "Quality")
+
+```
+
+# Multivariate Analysis
+
+I was able to confirm the statements mentioned during the biviriate analysis such a:
+
+White wines with quality level nine seem to have a high concentration of alcohol,
+with low density... This is based on new scatter plots visualizations
+where I used quality as the third dimension, and I can see how quality nine (red color) is more concentrated in particular areas based on the other two variables.
+
+For example when comparing density vs alcohol, I can see a high concentration of red point on lower right corner wich indicates low density and high alcohol values.
+
+
+
+------
+
+# Final Plots and Summary
+
+
+### Plot One
+
+
+what is the alcohol level per Quality Level?
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#Boxplot - alcohol Level per quality Level
+boxplot(alcohol~quality, data = white_w, col = (c("gold","blue")),
+        xlab = "Quality", ylab = "Alcohol", main = "Alcohol level per Quality Level")
+
+```
+
+
+### Description One
+
+From boxplot above, we can see that Quality Level 9 has a high level of alcohol, which is not very dispersed.
+
+
+
+### Plot Two
+
+- Alcohol and density (Negative correlation: -0.78)
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#Scatter Plot - Alcohol level and Density colored by Quality
+ggplot(aes(x= alcohol, y = density, colour= as.factor(quality)), data = white_w) +
+  scale_x_continuous(lim= c(7,14)) +
+  scale_y_continuous(lim= c(0.987,quantile(white_w$density, 0.99))) +
+  geom_point(alpha = 0.9)+
+  stat_smooth(method = 'lm', color = 'red') +
+  scale_color_brewer(palette = "RdYlBu", direction = -1, name = "Quality")+
+   ggtitle("Alcohol vs Density colored by Quality level")
+
+
+```
+
+
+### Description Two
+
+White wines with quality level nine seem to have a high concentration of alcohol,
+with low density.
+
+### Plot Three
+
+- density and residual.sugar (Positive correlation: 0.84)
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE }
+#Scatter Plot Density vs Residual sugar colored by Quality
+ggplot(aes(x= residual.sugar, y = density, colour= as.factor(quality)), data = white_w) +
+  scale_x_continuous(lim= c(0,22)) +
+  scale_y_continuous(lim= c(0.987,quantile(white_w$density, 0.999)))+
+  geom_point(alpha=.8, shape = 19)+
+  geom_smooth(method = "lm", se = FALSE, aes(colour=quality)) + scale_color_brewer(palette = "RdYlBu", direction = -1, name = "Quality") +
+  ggtitle("Residual Sugar vs Density colored by Quality level")
+  
+  
+```
+
+
+### Description Three
+
+As residual sugar increases the density increases as well, however I see a high concentration of red data points (Higher quality) on the lower left corner which infers that high quality wines have a low residual sugar level as well as low density.
+
+------
+
+# Reflection
+
+This project was a nice introduction to Exploratory Data analysis, where we start by evaluating the structure of the data, and getting familiar with the different variables in our data set, then we start making some progress in our analysis by doing univariate, bivariate and multivariate analysis to find meaningful and interesting relationships between the variables.
+
+
+I believe that if I would have had more knowledge about the topic (White wines), I would have been able to find and demonstrate more interesting facts.
+
+I found this project to be a little bit challenging, specially since I've never used the R Markdown and was having issues trying to knit the project so it would look properly.
+
+This Project could be expanded in the future by trying to implement a model and see how well it fits the data.
+
+
+# References:
+
+- R-studio website
+- R graphics with ggplot workshop notes: https://tutorials.iq.harvard.edu/R/Rgraphics/Rgraphics.html
